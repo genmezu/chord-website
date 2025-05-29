@@ -1,31 +1,103 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>和弦網站</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/your-js-library/1.0.0/your-js-library.min.js"></script>
-    <script src="js/scripts.js" defer></script>
+    <title>和弦查詢工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/vexflow/build/cjs/vexflow.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .piano {
+            display: flex;
+            margin: 20px 0;
+        }
+        .key {
+            border: 1px solid #000;
+            padding: 20px 10px;
+            margin: 2px;
+            cursor: pointer;
+        }
+        .white {
+            background: white;
+            width: 40px;
+        }
+        .black {
+            background: black;
+            color: white;
+            width: 30px;
+        }
+        #score {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>歡迎來到和弦網站</h1>
-    </header>
-    <main>
-        <section id="chord-display">
-            <h2>和弦顯示區</h2>
-            <div id="chord-output"></div>
-        </section>
-        <section id="chord-input">
-            <h2>輸入和弦</h2>
-            <input type="text" id="chord-name" placeholder="輸入和弦名稱">
-            <button id="submit-chord">顯示和弦</button>
-        </section>
-    </main>
-    <footer>
-        <p>© 2023 和弦網站</p>
-    </footer>
+    <h1>和弦查詢工具</h1>
+    <div class="piano">
+        <div class="key white" data-note="C">C</div>
+        <div class="key black" data-note="C#">C#</div>
+        <div class="key white" data-note="D">D</div>
+        <div class="key black" data-note="D#">D#</div>
+        <div class="key white" data-note="E">E</div>
+        <div class="key white" data-note="F">F</div>
+        <div class="key black" data-note="F#">F#</div>
+        <div class="key white" data-note="G">G</div>
+        <div class="key black" data-note="G#">G#</div>
+        <div class="key white" data-note="A">A</div>
+        <div class="key black" data-note="A#">A#</div>
+        <div class="key white" data-note="B">B</div>
+    </div>
+    <div id="chordInfo"></div>
+    <div id="score"></div>
+
+    <script>
+        const VF = Vex.Flow;
+        
+        function showChords(key) {
+            const chords = {
+                'major': ['', 'm', 'm', '', '', 'm', 'dim'],
+                'notes': [0, 2, 4, 5, 7, 9, 11]
+            };
+            
+            const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const keyIndex = notes.indexOf(key);
+            
+            let chordInfo = `<h2>${key} 調的常用和弦：</h2><ul>`;
+            for (let i = 0; i < 7; i++) {
+                const noteIndex = (keyIndex + chords.notes[i]) % 12;
+                chordInfo += `<li>${notes[noteIndex]}${chords.major[i]}</li>`;
+            }
+            chordInfo += '</ul>';
+            document.getElementById('chordInfo').innerHTML = chordInfo;
+            
+            // 繪製五線譜
+            const div = document.getElementById('score');
+            div.innerHTML = '';
+            const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
+            renderer.resize(500, 150);
+            const context = renderer.getContext();
+            const stave = new VF.Stave(10, 40, 400);
+            stave.addClef('treble').addTimeSignature('4/4');
+            stave.setContext(context).draw();
+            
+            const notes_vf = [
+                new VF.StaveNote({clef: "treble", keys: [`${key}/4`], duration: "w" })
+            ];
+            
+            VF.Formatter.FormatAndDraw(context, stave, notes_vf);
+        }
+
+        document.querySelectorAll('.key').forEach(key => {
+            key.addEventListener('click', () => {
+                const note = key.getAttribute('data-note');
+                showChords(note);
+            });
+        });
+    </script>
 </body>
 </html>
